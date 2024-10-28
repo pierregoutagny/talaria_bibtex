@@ -3,26 +3,43 @@ open Parser
 
 exception SyntaxError of string
 
-let surface = ref true
-
-let enter_entry () = surface := false
-let exit_entry () = surface := true
-
+let raise_syntax s = raise (SyntaxError s)
 let raise_unexpected_char (location: string) (c: char) =
-  raise (SyntaxError (Printf.sprintf "unexpected character in %s: %C" location c))
+  raise_syntax (Printf.sprintf "unexpected character in %s: %C" location c)
 
+type state_t = Surface | EntryParen | EntryCurl
+
+let state: state_t ref = ref Surface
+
+let is_surface () = !state = Surface
+
+let enter_curl () = state := EntryCurl
+let exit_curl () =
+  match !state with
+  | EntryCurl -> state := Surface
+  | Surface -> raise_syntax "Lexer - too many '}'"
+  | EntryParen -> raise_syntax "Lexer - cannot use '}' to close entry opened with '('"
+
+let enter_paren () = state := EntryParen
+let exit_paren () =
+  match !state with
+  | EntryParen -> state := Surface
+  | Surface -> raise_syntax "Lexer - extra ')'"
+  | EntryCurl -> raise_syntax "Lexer - cannot use ')' to close entry opened with '{'"
 }
 
-let ops = ['{' '}' ',' '=']
+let ops = ['{' '}' '(' ')' ',' '=']
 let space= [' ' '\t']
-let nops = [^ '{' '}' ',' '=']
+let nops = [^ '{' '}' '(' ')' ',' '=']
 let bnops=nops # space # ['\n']
 let key = bnops+
 
 rule main = parse
 | space { main lexbuf }
-| '{'  { if !surface then (enter_entry(); LCURL) else read_value 0 (Buffer.create 10) lexbuf }
-| '}'  { exit_entry(); RCURL }
+| '{'  { if is_surface() then (enter_curl(); LCURL) else read_value 0 (Buffer.create 10) lexbuf }
+| '}'  { exit_curl(); RCURL }
+| '('  { if is_surface() then (enter_paren(); LPAREN) else raise_syntax "Lexer - cannot use '(' inside entry" }
+| ')'  { exit_paren(); RPAREN }
 | '\n'  { Lexing.new_line lexbuf; main lexbuf}
 | '@'(nops+ as s)  {KIND s}
 | '='  { EQUAL }
@@ -42,4 +59,4 @@ and read_value n buf = parse
 | eof { raise (SyntaxError ("Lexer - Unexpected EOF - unfinished field")) }
 | _ as c { raise_unexpected_char "value" c }
 
-{ assert !surface }
+{ assert (is_surface()) }

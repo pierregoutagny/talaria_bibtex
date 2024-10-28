@@ -1,7 +1,10 @@
 %token <string> TEXT
 %token <string> KIND
 %token <string> KEY
-%token LCURL COMMA RCURL EQUAL EOF
+%token LCURL RCURL
+%token LPAREN RPAREN
+%token COMMA EQUAL
+%token EOF
 %type < Fields.raw_entry Fields.Database.t> main
 %start main
 
@@ -17,6 +20,7 @@
 
 entry:
 	| kind=KIND LCURL name=KEY COMMA e=properties RCURL
+	| kind=KIND LPAREN name=KEY COMMA e=properties RPAREN
 	{ {Fields.uid=name; kind; raw=e} }
 
 properties:

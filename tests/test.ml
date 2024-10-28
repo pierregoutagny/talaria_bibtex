@@ -22,8 +22,8 @@ module Scan_test = struct
   let rec scan ppf lexbuf= match Lexer.main lexbuf with
 	| EOF -> fp ppf "EOF \n"
 	| TEXT(s) -> fp ppf "text: \"%s\" \n" s ; scan ppf lexbuf
-	| LCURL -> fp ppf "<" ; scan ppf lexbuf
-	| RCURL -> fp ppf ">"; scan ppf lexbuf
+	| LCURL | LPAREN -> fp ppf "<" ; scan ppf lexbuf
+	| RCURL | RPAREN -> fp ppf ">"; scan ppf lexbuf
 	| COMMA -> fp ppf ":,:"; scan ppf lexbuf
 	| KIND s-> fp ppf "Type \"%s\"" s; scan ppf lexbuf
 	| EQUAL -> fp ppf "="; scan ppf lexbuf
