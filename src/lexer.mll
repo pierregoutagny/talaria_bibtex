@@ -26,20 +26,24 @@ let exit_paren () =
   | EntryParen -> state := Surface
   | Surface -> raise_syntax "Lexer - extra ')'"
   | EntryCurl -> raise_syntax "Lexer - cannot use ')' to close entry opened with '{'"
+
+type text_delimiter = Curl | Quote
+
 }
 
-let ops = ['{' '}' '(' ')' ',' '=']
+let ops = ['{' '}' '(' ')' '"' ',' '=']
 let space= [' ' '\t']
-let nops = [^ '{' '}' '(' ')' ',' '=']
+let nops = [^ '{' '}' '(' ')' '"' ',' '=']
 let bnops=nops # space # ['\n']
 let key = bnops+
 
 rule main = parse
 | space { main lexbuf }
-| '{'  { if is_surface() then (enter_curl(); LCURL) else read_text 0 (Buffer.create 10) lexbuf }
+| '{'  { if is_surface() then (enter_curl(); LCURL) else read_text Curl 0 (Buffer.create 10) lexbuf }
 | '}'  { exit_curl(); RCURL }
 | '('  { if is_surface() then (enter_paren(); LPAREN) else raise_syntax "Lexer - cannot use '(' inside entry" }
 | ')'  { exit_paren(); RPAREN }
+| '"'  { if is_surface() then raise_syntax "Lexer - cannot use '\"' outside entry" else read_text Quote 0 (Buffer.create 10) lexbuf }
 | '\n'  { Lexing.new_line lexbuf; main lexbuf}
 | '@'(nops+ as s)  {KIND s}
 | '='  { EQUAL }
@@ -48,14 +52,22 @@ rule main = parse
 | eof {EOF}
 | _ as c { raise_unexpected_char "main" c }
 
-and read_text n buf = parse
-| '{' as c { Buffer.add_char buf c; read_text (n+1) buf lexbuf }
+and read_text delim n buf = parse
+| '{' as c { Buffer.add_char buf c; read_text delim (n+1) buf lexbuf }
 | '}' as c {
   if n=0
-    then TEXT (Buffer.contents buf)
-    else ( Buffer.add_char buf c; read_text (n-1) buf lexbuf )
+    then if delim=Curl then TEXT (Buffer.contents buf) else raise_syntax "Lexer - fields must be brace-balanced" (* TODO relax this balancing constraint? *)
+    else ( Buffer.add_char buf c; read_text delim (n-1) buf lexbuf )
   }
-| [^ '{' '}']+ as s { Buffer.add_string buf s; read_text n buf lexbuf }
+| ('\\' _) as s { Buffer.add_string buf s; read_text delim n buf lexbuf }
+| '"' as c {
+  match delim with
+  | Curl -> Buffer.add_char buf c; read_text delim n buf lexbuf
+  | Quote -> if n=0
+    then TEXT (Buffer.contents buf)
+    else raise_syntax "Lexer - fields must be brace-balanced" (* TODO relax this balancing constraint? *)
+  }
+  | [^ '{' '}' '"' '\\']+ as s { Buffer.add_string buf s; read_text delim n buf lexbuf }
 | eof { raise (SyntaxError ("Lexer - Unexpected EOF - unfinished field")) }
 | _ as c { raise_unexpected_char "value" c }
 
