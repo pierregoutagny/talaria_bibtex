@@ -36,7 +36,7 @@ let key = bnops+
 
 rule main = parse
 | space { main lexbuf }
-| '{'  { if is_surface() then (enter_curl(); LCURL) else read_value 0 (Buffer.create 10) lexbuf }
+| '{'  { if is_surface() then (enter_curl(); LCURL) else read_text 0 (Buffer.create 10) lexbuf }
 | '}'  { exit_curl(); RCURL }
 | '('  { if is_surface() then (enter_paren(); LPAREN) else raise_syntax "Lexer - cannot use '(' inside entry" }
 | ')'  { exit_paren(); RPAREN }
@@ -48,14 +48,14 @@ rule main = parse
 | eof {EOF}
 | _ as c { raise_unexpected_char "main" c }
 
-and read_value n buf = parse
-| '{' as c { Buffer.add_char buf c; read_value (n+1) buf lexbuf }
+and read_text n buf = parse
+| '{' as c { Buffer.add_char buf c; read_text (n+1) buf lexbuf }
 | '}' as c {
   if n=0
     then TEXT (Buffer.contents buf)
-    else ( Buffer.add_char buf c; read_value (n-1) buf lexbuf )
+    else ( Buffer.add_char buf c; read_text (n-1) buf lexbuf )
   }
-| [^ '{' '}']+ as s { Buffer.add_string buf s; read_value n buf lexbuf }
+| [^ '{' '}']+ as s { Buffer.add_string buf s; read_text n buf lexbuf }
 | eof { raise (SyntaxError ("Lexer - Unexpected EOF - unfinished field")) }
 | _ as c { raise_unexpected_char "value" c }
 
