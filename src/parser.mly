@@ -16,21 +16,15 @@
 	| EOF {Fields.Database.empty}
 
 entry:
-	| kind=KIND LCURL name=TEXT COMMA e=properties RCURL
+	| kind=KIND LCURL name=KEY COMMA e=properties RCURL
 	{ {Fields.uid=name; kind; raw=e} }
 
 properties:
-	| key=TEXT EQUAL LCURL p=rtext RCURL COMMA e=properties
+	| key=KEY EQUAL p=TEXT COMMA e=properties
 	  { Fields.Database.add (String.trim key) p e }
-	| key=TEXT EQUAL LCURL p=rtext RCURL opt_comma
+	| key=KEY EQUAL p=TEXT opt_comma
 	  { Fields.Database.singleton (String.trim key) p }
 
 opt_comma:
 	| 	{()}
 	| COMMA {()}
-
-rtext:
-	| s=TEXT {s}
-	| s=TEXT EQUAL rs=rtext {s^"="^rs}
-	| s1=TEXT COMMA rs=rtext  {s1 ^","^ rs }
-	| LCURL s1=TEXT RCURL rs=rtext {s1 ^ rs }
