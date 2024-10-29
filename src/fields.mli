@@ -28,7 +28,14 @@ val named_field : name:string -> ('a, string) bijection -> 'a named_field
 val str_field : name:string -> string named_field
 val int_field : name:string -> int named_field
 module StrSet : Set.S with type elt = string
-module Database : Map.S with type key = string
+
+module Lowercase : sig
+  type t = string
+  val compare: t -> t -> int
+  val of_string: string -> t
+end
+
+module Database : Map.S with type key = Lowercase.t
 val strset_field : name:string -> StrSet.t named_field
 
 (** {1:field_list List of predefined fields } *)
@@ -80,11 +87,13 @@ type field_token =
   | FieldVar of string
   | FieldStr of string
 type field_value = field_token list
-type raw_entry = { uid:string; kind:string; raw: field_value Database.t  }
-type raw_string = { var: string; value: field_value }
+type raw_parser_entry = { uid:string; kind:string; raw: field_value Database.t  }
+type raw_parser_string = { var: string; value: field_value }
+
+type raw_entry = { uid:string; kind:string; raw: string Database.t  }
 
 (* TODO document *)
 type raw_entry_or_command =
-  | RawEntry of raw_entry
-  | RawString of raw_string
-val check: ?with_keys: string field Database.t -> raw_entry_or_command list -> data
+  | RawEntry of raw_parser_entry
+  | RawString of raw_parser_string
+val check: ?with_keys: string field Database.t -> ?with_env: string Database.t -> raw_entry_or_command list -> data
