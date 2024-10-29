@@ -1,6 +1,7 @@
 %token <string> TEXT
 %token <string> KIND
 %token <string> IDENT
+%token <string> NUMBER
 %token LCURL RCURL
 %token LPAREN RPAREN
 %token COMMA EQUAL
@@ -24,10 +25,14 @@ entry:
 	{ {Fields.uid=name; kind; raw=e} }
 
 properties:
-	| key=IDENT EQUAL p=TEXT COMMA e=properties
+	| key=IDENT EQUAL p=field_token COMMA e=properties
 	  { Fields.Database.add (String.trim key) p e }
-	| key=IDENT EQUAL p=TEXT opt_comma
+	| key=IDENT EQUAL p=field_token opt_comma
 	  { Fields.Database.singleton (String.trim key) p }
+
+field_token:
+  | n=NUMBER { n }
+  | s=TEXT   { s }
 
 opt_comma:
 	| 	{()}

@@ -34,10 +34,10 @@ type text_delimiter = Curl | Quote
 let ops = ['{' '}' '(' ')' '"' ',' '=' '#' '%' '\'']
 let space= [' ' '\t']
 let nops = [^ '{' '}' '(' ')' '"' ',' '=' '#' '%' '\'']
-let allowed_char = nops # space # ['\n']
+let allowed_char = nops # space # ['\n'] (* FIXME also remove ascii 0-37? cf bibtex.web:884. Maybe this should be defined positively *)
 let digit = ['0'-'9']
 let ident = (allowed_char # digit) allowed_char*
-let nonnegative = digit+
+let number = digit+
 
 rule main = parse
 | space { main lexbuf }
@@ -50,6 +50,7 @@ rule main = parse
 | '@'(ident as s)  {KIND s}
 | '='  { EQUAL }
 | ',' { COMMA }
+| number as s { NUMBER s }
 | ident as s { IDENT s }
 | eof {EOF}
 | _ as c { raise_unexpected_char "main" c }
