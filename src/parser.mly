@@ -33,6 +33,7 @@ properties:
 field_token:
   | n=NUMBER { n }
   | s=TEXT   { s }
+  | s=IDENT   { s }
 
 opt_comma:
 	| 	{()}

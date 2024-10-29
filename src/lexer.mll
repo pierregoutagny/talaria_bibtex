@@ -70,7 +70,7 @@ and read_text delim n buf = parse
     then TEXT (Buffer.contents buf)
     else raise_syntax "Lexer - fields must be brace-balanced" (* TODO relax this balancing constraint? *)
   }
-  | [^ '{' '}' '"' '\\']+ as s { Buffer.add_string buf s; read_text delim n buf lexbuf }
+| [^ '{' '}' '"' '\\']+ as s { Buffer.add_string buf s; read_text delim n buf lexbuf }
 | eof { raise (SyntaxError ("Lexer - Unexpected EOF - unfinished field")) }
 | _ as c { raise_unexpected_char "value" c }
 
