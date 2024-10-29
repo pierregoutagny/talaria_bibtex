@@ -34,7 +34,8 @@ field_token:
 (* String commands *)
 
 string_command:
-  | STRING var=IDENT EQUAL value=field_value { {Fields.var; value} }
+  | STRING LCURL var=IDENT EQUAL value=field_value RCURL { {Fields.var; value} }
+  | STRING LPAREN var=IDENT EQUAL value=field_value RPAREN { {Fields.var; value} }
 
 (* Entries *)
 
