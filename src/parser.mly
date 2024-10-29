@@ -7,18 +7,36 @@
 %token LPAREN RPAREN
 %token COMMA EQUAL CONCAT
 %token EOF
-%type < Fields.raw_entry Fields.Database.t> main
+%type < Fields.raw_entry_or_command list > main
 %start main
 
-%{
-  let add raw_entry database = Fields.Database.add raw_entry.Fields.uid raw_entry database
-%}
+%{ %}
 
 %%
 
 %public main:
-	| entry=entry d=main { add entry d}
-	| EOF {Fields.Database.empty}
+  | l=list(entry_or_command) EOF { l }
+
+entry_or_command:
+  | e=entry          { Fields.RawEntry e }
+  | s=string_command { Fields.RawString s }
+
+(* Field values *)
+
+field_value:
+  | v=separated_nonempty_list(CONCAT, field_token) { v }
+
+field_token:
+  | n=NUMBER { Fields.FieldNum n }
+  | s=TEXT   { Fields.FieldStr s }
+  | v=IDENT  { Fields.FieldVar v }
+
+(* String commands *)
+
+string_command:
+  | STRING var=IDENT EQUAL value=field_value { {Fields.var; value} }
+
+(* Entries *)
 
 entry:
 	| kind=KIND LCURL name=IDENT COMMA e=properties RCURL
@@ -31,10 +49,3 @@ properties:
 	| key=IDENT EQUAL p=field_value COMMA?
 	  { Fields.Database.singleton (String.trim key) p }
 
-field_value:
-  | v=separated_nonempty_list(CONCAT, field_token) { v }
-
-field_token:
-  | n=NUMBER { Fields.FieldNum n }
-  | s=TEXT   { Fields.FieldStr s }
-  | v=IDENT  { Fields.FieldVar v }

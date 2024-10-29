@@ -163,5 +163,18 @@ let check_entry keydtb raw_entry =
   let init = create [ str uid ^= raw_entry.uid; str kind ^= raw_entry.kind; raw ^= Database.empty ] in
   Database.fold add raw_entry.raw init
 
-let check ?(with_keys=default_keys) raw =
-  Database.map (check_entry with_keys) raw
+type raw_string = { var: string; value: field_value }
+type raw_entry_or_command =
+  | RawEntry of raw_entry
+  | RawString of raw_string
+
+let process_raw_list l =
+  let f acc = function
+    | RawEntry e -> Database.add e.uid e acc
+    | RawString _ -> acc (* FIXME don't ignore *)
+  in
+  List.fold_left f Database.empty l
+
+let check ?(with_keys=default_keys) (raw: raw_entry_or_command list) =
+  let raw_db = process_raw_list raw in
+  Database.map (check_entry with_keys) raw_db

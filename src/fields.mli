@@ -81,4 +81,10 @@ type field_token =
   | FieldStr of string
 type field_value = field_token list
 type raw_entry = { uid:string; kind:string; raw: field_value Database.t  }
-val check: ?with_keys: string field Database.t -> raw_entry Database.t -> data
+type raw_string = { var: string; value: field_value }
+
+(* TODO document *)
+type raw_entry_or_command =
+  | RawEntry of raw_entry
+  | RawString of raw_string
+val check: ?with_keys: string field Database.t -> raw_entry_or_command list -> data
