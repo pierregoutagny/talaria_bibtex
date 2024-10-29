@@ -28,7 +28,7 @@ entry:
 properties:
 	| key=IDENT EQUAL p=field_value COMMA e=properties
 	  { Fields.Database.add (String.trim key) p e }
-	| key=IDENT EQUAL p=field_value opt_comma
+	| key=IDENT EQUAL p=field_value COMMA?
 	  { Fields.Database.singleton (String.trim key) p }
 
 field_value:
@@ -38,7 +38,3 @@ field_token:
   | n=NUMBER { Fields.FieldNum n }
   | s=TEXT   { Fields.FieldStr s }
   | v=IDENT  { Fields.FieldVar v }
-
-opt_comma:
-	| 	{()}
-	| COMMA {()}
