@@ -8,6 +8,7 @@ let ops = [',' '-']
 let nops = [^ ',' '-']
 let num=['0'-'9']
 let space= [' ' '\t']
+let nocomma = [^ ','] # space
 let bnops=nops # space
 let nnum = nops # num
 
@@ -25,7 +26,7 @@ rule pages=parse
 and names= parse
 | space { names lexbuf }
 | ',' { COMMA }
-| bnops+ as s { match s with
+| nocomma+ as s { match s with
 			| "and" -> AND
 			| s -> WORD s 
 }

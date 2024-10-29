@@ -34,7 +34,11 @@ open Field_types
 	| n=name AND ns=names {n::ns} 
 
 name:
-	| lastname=WORD COMMA firstname=WORD  { {firstname; lastname} }
+	| lastname=words COMMA firstname=words  { {firstname; lastname} }
+
+words:
+  | w=WORD { w }
+  | w=WORD ws=words { w ^ " " ^ ws}
 
 %public path:
 	| w=WORD EOF {[w]}
