@@ -1,6 +1,6 @@
 %token <string> TEXT
 %token <string> KIND
-%token <string> KEY
+%token <string> IDENT
 %token LCURL RCURL
 %token LPAREN RPAREN
 %token COMMA EQUAL
@@ -19,14 +19,14 @@
 	| EOF {Fields.Database.empty}
 
 entry:
-	| kind=KIND LCURL name=KEY COMMA e=properties RCURL
-	| kind=KIND LPAREN name=KEY COMMA e=properties RPAREN
+	| kind=KIND LCURL name=IDENT COMMA e=properties RCURL
+	| kind=KIND LPAREN name=IDENT COMMA e=properties RPAREN
 	{ {Fields.uid=name; kind; raw=e} }
 
 properties:
-	| key=KEY EQUAL p=TEXT COMMA e=properties
+	| key=IDENT EQUAL p=TEXT COMMA e=properties
 	  { Fields.Database.add (String.trim key) p e }
-	| key=KEY EQUAL p=TEXT opt_comma
+	| key=IDENT EQUAL p=TEXT opt_comma
 	  { Fields.Database.singleton (String.trim key) p }
 
 opt_comma:

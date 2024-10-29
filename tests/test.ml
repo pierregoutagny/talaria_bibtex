@@ -27,7 +27,7 @@ module Scan_test = struct
 	| COMMA -> fp ppf ":,:"; scan ppf lexbuf
 	| KIND s-> fp ppf "Type \"%s\"" s; scan ppf lexbuf
 	| EQUAL -> fp ppf "="; scan ppf lexbuf
-	| KEY s-> fp ppf "key: \"%s\"" s; scan ppf lexbuf
+	| IDENT s-> fp ppf "ident: \"%s\"" s; scan ppf lexbuf
 end
 
 
