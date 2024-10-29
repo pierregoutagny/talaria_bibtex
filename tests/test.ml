@@ -25,9 +25,12 @@ module Scan_test = struct
 	| LCURL | LPAREN -> fp ppf "<" ; scan ppf lexbuf
 	| RCURL | RPAREN -> fp ppf ">"; scan ppf lexbuf
 	| COMMA -> fp ppf ":,:"; scan ppf lexbuf
-	| KIND s-> fp ppf "Type \"%s\"" s; scan ppf lexbuf
+	| KIND s-> fp ppf "\nType \"%s\"" s; scan ppf lexbuf
 	| EQUAL -> fp ppf "="; scan ppf lexbuf
 	| IDENT s-> fp ppf "ident: \"%s\"" s; scan ppf lexbuf
+	| STRING -> fp ppf "\nSTRING"; scan ppf lexbuf
+	| CONCAT -> fp ppf "#"; scan ppf lexbuf
+	| NUMBER n -> fp ppf "number: %n" n; scan ppf lexbuf
 end
 
 
@@ -57,6 +60,10 @@ let pp_raw ppf entry = match Fields.(entry.%{raw}) with
       Format.fprintf ppf "raw={%a}" (plist ",@ " pp_binding) (Database.bindings dtb)
 
 let () =
+(*
+  let f=open_in "test.bib" in
+  Format.printf "%a" Scan_test.scan (Lexing.from_channel f);
+*)
   let f=open_in "test.bib" in
   let bib = parse @@ Lexing.from_channel f in
   let open Fields in
