@@ -47,10 +47,15 @@ rule main = parse
 | ')'  { exit_paren(); RPAREN }
 | '"'  { if is_surface() then raise_syntax "Lexer - cannot use '\"' outside entry" else read_text Quote 0 (Buffer.create 10) lexbuf }
 | '\n'  { Lexing.new_line lexbuf; main lexbuf}
-| '@'(ident as s)  {KIND s}
+| '@'(ident as s)  {
+    match String.lowercase_ascii s with
+    | "string" -> STRING
+    | _ -> KIND s
+  }
 | '='  { EQUAL }
+| '#'  { CONCAT }
 | ',' { COMMA }
-| number as s { NUMBER s }
+| number as s { NUMBER (int_of_string s) }
 | ident as s { IDENT s }
 | eof {EOF}
 | _ as c { raise_unexpected_char "main" c }

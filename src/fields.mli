@@ -75,5 +75,10 @@ type entry = t
 type data = entry Database.t
 
 (** {1:raw_database Raw database and entries } *)
-type raw_entry = { uid:string; kind:string; raw: string Database.t  }
+type field_token =
+  | FieldNum of int
+  | FieldVar of string
+  | FieldStr of string
+type field_value = field_token list
+type raw_entry = { uid:string; kind:string; raw: field_value Database.t  }
 val check: ?with_keys: string field Database.t -> raw_entry Database.t -> data

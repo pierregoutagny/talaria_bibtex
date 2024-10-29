@@ -102,6 +102,7 @@ let get_kind entry = match entry.%{kind.f} with
 let get_state entry = match entry.%{state.f} with None -> WIP | Some x -> x
 
 type entry = Record.t
+
 module Database = struct
   module Lowercase : Map.OrderedType = struct
     type t = string
@@ -113,7 +114,15 @@ module Database = struct
 end
 type data = entry Database.t
 
-type raw_entry = { uid:string; kind:string; raw: string Database.t  }
+type field_token =
+  | FieldNum of int
+  | FieldVar of string
+  | FieldStr of string
+
+type field_value = field_token list
+
+type raw_entry = { uid:string; kind:string; raw: field_value Database.t  }
+
 let default_keys =
   let ( |>> ) database named_field =
     Database.add named_field.name (str named_field) database
@@ -136,8 +145,17 @@ let default_keys =
   |>> location
   |>> conference
 
+let process_tokens token_list : string =
+  let f = function
+    | FieldNum n -> string_of_int n
+    | FieldStr s -> s
+    | FieldVar _ -> failwith "vars not implemented yet!"
+  in
+  List.map f token_list |> String.concat ""
+
 let check_entry keydtb raw_entry =
-  let add key value e =
+  let add key token_list e =
+    let value = process_tokens token_list in
     match Database.find key keydtb with
     | exception Not_found ->  e.%{ raw |= fun m -> Database.add key value m }
     | key -> e.%{ key ^= value }

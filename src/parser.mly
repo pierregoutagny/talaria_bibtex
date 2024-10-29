@@ -1,10 +1,11 @@
 %token <string> TEXT
 %token <string> KIND
+%token STRING
 %token <string> IDENT
-%token <string> NUMBER
+%token <int> NUMBER
 %token LCURL RCURL
 %token LPAREN RPAREN
-%token COMMA EQUAL
+%token COMMA EQUAL CONCAT
 %token EOF
 %type < Fields.raw_entry Fields.Database.t> main
 %start main
@@ -25,15 +26,18 @@ entry:
 	{ {Fields.uid=name; kind; raw=e} }
 
 properties:
-	| key=IDENT EQUAL p=field_token COMMA e=properties
+	| key=IDENT EQUAL p=field_value COMMA e=properties
 	  { Fields.Database.add (String.trim key) p e }
-	| key=IDENT EQUAL p=field_token opt_comma
+	| key=IDENT EQUAL p=field_value opt_comma
 	  { Fields.Database.singleton (String.trim key) p }
 
+field_value:
+  | v=separated_nonempty_list(CONCAT, field_token) { v }
+
 field_token:
-  | n=NUMBER { n }
-  | s=TEXT   { s }
-  | s=IDENT   { s }
+  | n=NUMBER { Fields.FieldNum n }
+  | s=TEXT   { Fields.FieldStr s }
+  | v=IDENT  { Fields.FieldVar v }
 
 opt_comma:
 	| 	{()}
