@@ -102,7 +102,15 @@ let get_kind entry = match entry.%{kind.f} with
 let get_state entry = match entry.%{state.f} with None -> WIP | Some x -> x
 
 type entry = Record.t
-module Database=Map.Make(String)
+module Database = struct
+  module Lowercase : Map.OrderedType = struct
+    type t = string
+    let compare s1 s2 =
+      let open String in
+      compare (lowercase_ascii s1) (lowercase_ascii s2)
+  end
+  include Map.Make(String)
+end
 type data = entry Database.t
 
 type raw_entry = { uid:string; kind:string; raw: string Database.t  }
