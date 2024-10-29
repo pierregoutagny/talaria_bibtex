@@ -139,6 +139,24 @@ let default_keys =
   |>> location
   |>> conference
 
+let default_env =
+  let ( |>> ) database (var, value) =
+    Database.add var value database
+  in
+  Database.empty
+  |>> ("jan", "January")
+  |>> ("feb", "February")
+  |>> ("mar", "March")
+  |>> ("apr", "April")
+  |>> ("may", "May")
+  |>> ("jun", "June")
+  |>> ("jul", "July")
+  |>> ("aug", "August")
+  |>> ("sep", "September")
+  |>> ("oct", "October")
+  |>> ("nov", "November")
+  |>> ("dec", "December")
+
 type field_token =
   | FieldNum of int
   | FieldVar of string
@@ -189,6 +207,6 @@ let process_raw_list ?(with_env=Database.empty) (l: raw_entry_or_command list)
   let db,_ = List.fold_left f (Database.empty, with_env) l in
   db
 
-let check ?(with_keys=default_keys) ?(with_env=Database.empty) (raw: raw_entry_or_command list) =
+let check ?(with_keys=default_keys) ?(with_env=default_env) (raw: raw_entry_or_command list) =
   let raw_db = process_raw_list ~with_env raw in
   Database.map (check_entry with_keys) raw_db
